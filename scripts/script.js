@@ -1,4 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
+    'use strict'
+
+
     const getData = (url, callback) => {
         fetch(url)
             .then((response) => {
@@ -174,26 +177,66 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const renderCrossSell = () => {
+        const COUNT_ROW_GOODS = 4;
         const crossSellList = document.querySelector('.cross-sell__list');
+        const crossSellAdd = document.querySelector('.cross-sell__add')
+
+        const allGoods = [];
+        let wrapRender = null;
+
+        const shuffle = arr => arr.sort(() => Math.random() - 0.5)
 
         const createCrossSellItem = (good) => {
+            const { photo, name, price } = good;
+
+
             const liItem = document.createElement('li');
             liItem.innerHTML = `
             <article class="cross-sell__item">
-            <img class="cross-sell__image" src="cross-sell-dbase/img/30052979b.jpg" alt="">
-            <h3 class="cross-sell__title">${good.name}</h3>
-            <p class="cross-sell__price">39490₽</p>
+            <img class="cross-sell__image" src="${photo}" alt="${name}">
+            <h3 class="cross-sell__title">${name}</h3>
+            <p class="cross-sell__price">${price}</p>
             <button type="button" class="button button_buy cross-sell__button">Купить</button>
         </article>
             `;
             return liItem;
         };
 
-        const createCrossSellList = (goods) => {
-            goods.forEach((item) => {
+        const render = arr => {
+            arr.forEach((item) => {
                 crossSellList.append(createCrossSellItem(item));
             });
+        }
+
+        const wrapper = (fn, count) => {
+            let counter = 0
+            return (...args) => {
+                if (counter === count) return;
+                counter++;
+                return fn(...args)
+            }
+        }
+
+
+
+
+        const createCrossSellList = (goods) => {
+            wrapRender = wrapper(render, parseInt(goods.length / COUNT_ROW_GOODS) + 1)
+
+            allGoods.push(...shuffle(goods))
+            // crossSellList.textContent = '';
+            // const shuffleGoods = shuffle(allGoods)
+            const fourItems = allGoods.splice(0, COUNT_ROW_GOODS)
+            render(fourItems)
+
+            // setTimeout(createCrossSellList, 5000)
         };
+
+        crossSellAdd.addEventListener('click', () => {
+            wrapRender(allGoods.splice(0, COUNT_ROW_GOODS));
+            //        crossSellAdd.remove()
+        })
+
         getData('cross-sell-dbase/dbase.json', createCrossSellList);
     };
 
@@ -201,4 +244,5 @@ document.addEventListener('DOMContentLoaded', () => {
     accordion();
     modal();
     renderCrossSell();
+    amenu('.header__menu', '.header-menu__list', '.header-menu__item', '.header-menu__burger');
 });
