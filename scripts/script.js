@@ -1,4 +1,39 @@
 document.addEventListener('DOMContentLoaded', () => {
+    const getData = (url, callback) => {
+        fetch(url)
+            .then((response) => {
+                if (response.ok) {
+                    return response.json();
+                }
+                throw new Error(response.statusText)
+            })
+            .then(callback)
+            .catch((err) => {
+                console.log(err)
+            })
+
+
+        /*
+        const request = new XMLHttpRequest();
+        request.open('GET', url);
+        request.send();
+
+        request.addEventListener('readystatechange', () => {
+            if (request.readyState !== 4) return;
+            if (request.status === 200) {
+                const response = JSON.parse(request.response);
+                callback(response);
+            } else {
+                console.error(new Error('Ошибка:' + request.status));
+            }
+        }); */
+    };
+
+    /*
+    getData('cross-sell-dbase/dbase.json', (data) => {
+        console.log(data);
+    });
+*/
     const tabs = () => {
         const cardDetailChangeElems = document.querySelectorAll('.card-detail__change');
         const cardDetailsTitleElem = document.querySelector('.card-details__title');
@@ -49,11 +84,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const characteristicsListElem = document.querySelector('.characteristics__list');
         const characteristicsItemElems = document.querySelectorAll('.characteristics__item');
 
-        characteristicsItemElems.forEach(elem => {
+        characteristicsItemElems.forEach((elem) => {
             if (elem.children[1].classList.contains('active')) {
-              elem.children[1].style.height = `${elem.children[1].scrollHeight}px`;
-    }
-})
+                elem.children[1].style.height = `${elem.children[1].scrollHeight}px`;
+            }
+        });
 
         const open = (button, dropDown) => {
             closeAllDrops(button, dropDown);
@@ -84,36 +119,86 @@ document.addEventListener('DOMContentLoaded', () => {
                     ? close(target, description)
                     : open(target, description);
             }
-
         });
         document.body.addEventListener('click', (event) => {
-            const target = event.target
+            const target = event.target;
             if (!target.closest('.characteristics__list')) {
                 closeAllDrops();
             }
-})
+        });
 
         // setTimeout(closeAllDrops, 5000);
     };
 
-
     const modal = () => {
-    const cardDetailsButtonBuy = document.querySelector('.card-details__button_buy')
+        const cardDetailsButtonBuy = document.querySelector('.card-details__button_buy');
+        const cardDetailsButtonDelivery = document.querySelector('.card-details__button_delivery');
         const modal = document.querySelector('.modal');
 
-        cardDetailsButtonBuy.addEventListener('click', () => {
-            modal.classList.add('open')
-        })
+        const cardDetailsTitle = document.querySelector('.card-details__title');
+        const modalTitle = modal.querySelector('.modal__title');
+        const modalSubtitle = modal.querySelector('.modal__subtitle');
+        const modalTitleSubmit = modal.querySelector('.modal__title-submit');
+
+        const openModal = (event) => {
+            const target = event.target;
+            modal.classList.add('open');
+            document.addEventListener('keydown', escapeHandler);
+            modalTitle.textContent = cardDetailsTitle.textContent;
+            modalTitleSubmit.value = cardDetailsTitle.textContent;
+            modalSubtitle.textContent = target.dataset.buttonBuy;
+        };
+
+        const closeModal = () => {
+            modal.classList.remove('open');
+            document.removeEventListener('keydown', escapeHandler);
+        };
+
+        cardDetailsButtonBuy.addEventListener('click', openModal);
+
+        const escapeHandler = (event) => {
+            if (event.code === 'Escape') {
+                closeModal();
+            }
+        };
+
         modal.addEventListener('click', (event) => {
             const target = event.target;
-            if (target.classList.contains('modal__close')) {
-
-                modal.classList.remove('open')
+            if (target.classList.contains('modal__close') || target === modal) {
+                closeModal();
             }
-        })
-    }
+        });
+
+        cardDetailsButtonBuy.addEventListener('click', openModal);
+        cardDetailsButtonDelivery.addEventListener('click', openModal);
+    };
+
+    const renderCrossSell = () => {
+        const crossSellList = document.querySelector('.cross-sell__list');
+
+        const createCrossSellItem = (good) => {
+            const liItem = document.createElement('li');
+            liItem.innerHTML = `
+            <article class="cross-sell__item">
+            <img class="cross-sell__image" src="cross-sell-dbase/img/30052979b.jpg" alt="">
+            <h3 class="cross-sell__title">${good.name}</h3>
+            <p class="cross-sell__price">39490₽</p>
+            <button type="button" class="button button_buy cross-sell__button">Купить</button>
+        </article>
+            `;
+            return liItem;
+        };
+
+        const createCrossSellList = (goods) => {
+            goods.forEach((item) => {
+                crossSellList.append(createCrossSellItem(item));
+            });
+        };
+        getData('cross-sell-dbase/dbase.json', createCrossSellList);
+    };
 
     tabs();
     accordion();
     modal();
+    renderCrossSell();
 });
